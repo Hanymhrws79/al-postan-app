@@ -1,48 +1,52 @@
 import streamlit as st
 import google.generativeai as genai
 
-st.set_page_config(page_title="البستان AI")
-
-# محاولة الاتصال بمفتاح الـ API
+# 1. إعداد الاتصال بمفتاحك المجاني
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    
-    # هنا التعديل الذكي: سنحاول تجربة كل الأسماء الممكنة حتى يعمل واحد منها
-    model_names = ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-pro']
-    model = None
-    
-    for name in model_names:
-        try:
-            model = genai.GenerativeModel(name)
-            # تجربة وهمية للتأكد أن النموذج شغال
-            test_res = model.generate_content("hi")
-            break # إذا نجح، توقف عن البحث
-        except:
-            continue
-            
-    if model is None:
-        st.error("عذراً، جميع نماذج جوجل غير متاحة حالياً في هذه النسخة.")
+    # نستخدم Flash لأنه النسخة المجانية الأقوى حالياً
+    model = genai.GenerativeModel('gemini-1.5-flash')
 except Exception as e:
-    st.error(f"خطأ في الإعدادات: {e}")
+    st.error("تأكد من وضع المفتاح في Secrets")
 
-st.title("🌳 البستان AI")
+# 2. واجهة التطبيق
+st.set_page_config(page_title="البستان AI", page_icon="🌳")
+st.title("🌳 منصة البستان AI")
+st.subheader("مساعدك الذكي في التحليل التسويقي")
 
-# نظام الدخول البسيط
+# 3. نظام الدخول
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
 if not st.session_state["authenticated"]:
-    pwd = st.text_input("كود التفعيل:", type="password")
+    user_pwd = st.text_input("أدخل كود التفعيل الخاص بك:", type="password")
     if st.button("دخول"):
-        if pwd == str(st.secrets["APP_PASSWORD"]):
+        if user_pwd == str(st.secrets["APP_PASSWORD"]):
             st.session_state["authenticated"] = True
             st.rerun()
+        else:
+            st.error("الكود غير صحيح")
 else:
-    bus_name = st.text_input("اسم مشروعك:")
-    if st.button("حلل الآن"):
-        try:
-            # استخدام أسلوب توليد يتماشى مع النسخ القديمة والجديدة
-            response = model.generate_content(f"حلل تسويق {bus_name} باختصار")
-            st.write(response.text)
-        except Exception as e:
-            st.error(f"حدث خطأ: {e}")
+    # 4. محرك التحليل
+    with st.form("marketing_form"):
+        name = st.text_input("اسم النشاط التجاري:")
+        niche = st.text_input("مجال العمل:")
+        submit = st.form_submit_button("🚀 ابدأ التحليل الذكي")
+
+    if submit:
+        if name and niche:
+            with st.spinner("جاري التفكير وبناء الخطة..."):
+                try:
+                    prompt = f"أنت خبير تسويق. قدم 5 نصائح استراتيجية لـ {name} في مجال {niche} وجدول محتوى بسيط."
+                    response = model.generate_content(prompt)
+                    st.success("تم التحليل بنجاح!")
+                    st.markdown(response.text)
+                except Exception as e:
+                    st.error(f"حدث خطأ: {e}")
+        else:
+            st.warning("يرجى كتابة الاسم والمجال")
+
+    if st.sidebar.button("تسجيل الخروج"):
+        st.session_state["authenticated"] = False
+        st.rerun()
+
