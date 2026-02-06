@@ -27,7 +27,10 @@ st.markdown("""
 try:
     # جلب مفتاح Gemini
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-pro')
+    
+    # --- التعديل هنا: استخدام النموذج الأحدث لتجنب خطأ 404 ---
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    
     # جلب كلمة سر التطبيق
     MASTER_PASSWORD = st.secrets["APP_PASSWORD"]
 except KeyError:
@@ -44,7 +47,7 @@ if not st.session_state["authenticated"]:
         st.subheader("🔐 تسجيل الدخول")
         user_pass = st.text_input("أدخل كود التفعيل الخاص بك:", type="password")
         if st.button("دخول النظام"):
-            if user_pass == MASTER_PASSWORD:
+            if user_pass == str(MASTER_PASSWORD): # تحويل لنص لضمان المطابقة
                 st.session_state["authenticated"] = True
                 st.rerun()
             else:
@@ -65,7 +68,7 @@ else:
     # 5. عرض النتائج والجداول
     if submit:
         if name and niche and competitors:
-            with st.spinner('⏳ جاري استخراج البيانات وبناء الجداول...'):
+            with st.spinner('⏳ جاري استخراج البيانات وبناء الجداول باستخدام Gemini 1.5...'):
                 prompt = f"""
                 أنت خبير تسويق رقمي. صمم تقرير لـ {name} في مجال {niche}.
                 الجمهور: {audience} | الميزانية: {budget} | النبرة: {tone} | المنافسون: {competitors}
@@ -84,7 +87,7 @@ else:
                     st.markdown(response.text)
                     st.download_button("تحميل التقرير", response.text, file_name="strategy.txt")
                 except Exception as e:
-                    st.error(f"حدث خطأ: {e}")
+                    st.error(f"حدث خطأ أثناء الاتصال بالنموذج: {e}")
         else:
             st.warning("⚠️ يرجى ملء الخانات الأساسية.")
 
