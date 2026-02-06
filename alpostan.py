@@ -1,78 +1,80 @@
 import streamlit as st
 import google.generativeai as genai
 
-# 1. إعداد واجهة الصفحة
-st.set_page_config(page_title="البستان AI - المساعد الذكي", layout="wide")
+# 1. إعدادات الصفحة
+st.set_page_config(page_title="البستان AI", layout="wide")
 
-# تصميم اللوجو والهوية البصرية
+# 2. تصميم الواجهة
 st.markdown("""
-    <style>
-    .main-title {
-        text-align: center; 
-        background-color: #1b5e20; 
-        padding: 20px; 
-        border-radius: 15px;
-        margin-bottom: 25px;
-    }
-    .main-title h1 { color: white; font-family: 'Cairo', sans-serif; margin: 0; }
-    .main-title p { color: #c8e6c9; font-size: 1.1em; }
-    </style>
-    <div class="main-title">
-        <h1>🌳 البستان AI</h1>
-        <p>المنصة الذكية لتحليل المنافسين وبناء استراتيجيات التسويق</p>
-    </div>
-    """, unsafe_allow_html=True)
+<style>
+.main-title {text-align: center; background-color: #1b5e20; padding: 20px; border-radius: 15px; margin-bottom: 25px;}
+.main-title h1 {color: white; font-family: 'Cairo', sans-serif; margin: 0;}
+</style>
+<div class="main-title"><h1>🌳 منصة البستان AI</h1></div>
+""", unsafe_allow_html=True)
 
-# 2. جلب المفاتيح السرية من الخزنة (Secrets)
+# 3. جلب البيانات من Secrets
 try:
+    # إعداد مكتبة جوجل
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    # السطر 32 المعدل والمنضبط المسافات:
-  model = genai.GenerativeModel(model_name="gemini-1.5-flash")
-    MASTER_PASSWORD = st.secrets["APP_PASSWORD"]
-except KeyError:
-    st.error("⚠️ خطأ: لم يتم العثور على المفاتيح في إعدادات Secrets.")
+    
+    # تعريف النموذج - استخدمنا الاسم المباشر والمستقر
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    
+    # كلمة السر
+    MASTER_PASSWORD = str(st.secrets["APP_PASSWORD"])
+except Exception as e:
+    st.error("⚠️ تأكد من وضع GEMINI_API_KEY و APP_PASSWORD في صفحة Secrets بالموقع.")
     st.stop()
 
-# 3. نظام التحقق من الهوية
-if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False
+# 4. نظام تسجيل الدخول
+if "auth" not in st.session_state:
+    st.session_state["auth"] = False
 
-if not st.session_state["authenticated"]:
+if not st.session_state["auth"]:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.subheader("🔐 تسجيل الدخول")
-        user_pass = st.text_input("أدخل كود التفعيل الخاص بك:", type="password")
-        if st.button("دخول النظام"):
-            if user_pass == str(MASTER_PASSWORD):
-                st.session_state["authenticated"] = True
+        st.subheader("🔐 دخول النظام")
+        pwd = st.text_input("أدخل كود التفعيل:", type="password")
+        if st.button("دخول"):
+            if pwd == MASTER_PASSWORD:
+                st.session_state["auth"] = True
                 st.rerun()
             else:
-                st.error("❌ الكود غير صحيح.")
+                st.error("❌ الكود غير صحيح")
 else:
-    # 4. القائمة الجانبية للمدخلات
+    # 5. واجهة البرنامج الأساسية
     with st.sidebar:
-        st.header("⚙️ بيانات الحملة")
+        st.header("📊 بيانات المشروع")
         name = st.text_input("اسم النشاط التجاري:")
-        niche = st.text_input("مجال العمل:")
-        audience = st.text_input("الجمهور المستهدف:")
-        competitors = st.text_area("المنافسون:")
-        budget = st.number_input("الميزانية الشهرية ($):", min_value=0, value=500)
-        tone = st.selectbox("نبرة الصوت:", ["احترافية", "مرحة", "حماسية", "تعليمية"])
-        submit = st.button("🚀 تحليل وبناء الخطة")
+        niche = st.text_input("المجال:")
+        comp = st.text_area("المنافسين (اكتب كل منافس في سطر):")
+        submit_btn = st.button("🚀 تحليل الآن")
+        
+        if st.button("تسجيل الخروج"):
+            st.session_state["auth"] = False
+            st.rerun()
 
-    # 5. عرض النتائج
-    if submit:
-        if name and niche and competitors:
-            with st.spinner('⏳ جاري التحليل...'):
-                prompt = f"صمم تقرير تسويقي لـ {name} في مجال {niche}. الجمهور: {audience}. المنافسون: {competitors}. الميزانية: {budget}. النبرة: {tone}. اعرض النتائج في جداول Markdown."
+    if submit_btn:
+        if name and niche and comp:
+            with st.spinner("⏳ جاري استدعاء الذكاء الاصطناعي وبناء الجداول..."):
                 try:
+                    prompt = f"""
+                    أنت خبير تسويق محترف. قم بعمل تحليل لـ {name} في مجال {niche}.
+                    المنافسون هم: {comp}.
+                    المطلوب:
+                    1. جدول تحليل SWOT للمنافسين.
+                    2. جدول بخطة محتوى لمدة أسبوع.
+                    3. نصيحة ذهبية للتميز في هذا السوق.
+                    اجعل الرد باللغة العربية ومنظماً في جداول Markdown.
+                    """
                     response = model.generate_content(prompt)
-                    st.success(f"✅ تم تجهيز استراتيجية {name}")
+                    st.success(f"✅ تم التحليل بنجاح لـ {name}")
                     st.markdown(response.text)
                 except Exception as e:
-                    st.error(f"حدث خطأ: {e}")
+                    st.error(f"حدث خطأ في الاتصال بـ Gemini: {e}")
+        else:
+            st.warning("⚠️ فضلاً أكمل جميع البيانات (الاسم، المجال، المنافسين).")
 
-    if st.sidebar.button("تسجيل الخروج"):
-        st.session_state["authenticated"] = False
-        st.rerun()
-
+st.markdown("---")
+st.caption("برمجة وتطوير البستان AI © 2026")
