@@ -29,7 +29,7 @@ try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     
     # --- التعديل هنا: استخدام النموذج الأحدث لتجنب خطأ 404 ---
-    model = genai.GenerativeModel('gemini-1.5-flash')
+   model = genai.GenerativeModel('models/gemini-1.5-flash')
     
     # جلب كلمة سر التطبيق
     MASTER_PASSWORD = st.secrets["APP_PASSWORD"]
@@ -97,3 +97,4 @@ else:
 
 st.markdown("---")
 st.caption("تم التطوير بواسطة البستان AI © 2026")
+
