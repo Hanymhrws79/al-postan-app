@@ -1,51 +1,48 @@
 import streamlit as st
 import google.generativeai as genai
 
-# 1. إعدادات الصفحة
-st.set_page_config(page_title="البستان AI", layout="wide")
+st.set_page_config(page_title="البستان AI")
 
-# 2. التأكد من المفاتيح
-if "GEMINI_API_KEY" not in st.secrets:
-    st.error("خطأ: مفتاح GEMINI_API_KEY غير موجود في Secrets")
-    st.stop()
-
-# 3. محاولة الاتصال (حل مشكلة الإصدارات)
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-
-# سنحاول تشغيل الموديل بأكثر من طريقة لضمان النجاح
+# محاولة الاتصال بمفتاح الـ API
 try:
-    # الطريقة الأولى: الاسم المباشر
-    model = genai.GenerativeModel('gemini-1.5-flash')
-except:
-    try:
-        # الطريقة الثانية: إضافة المسار
-        model = genai.GenerativeModel('models/gemini-1.5-flash')
-    except:
-        # الطريقة الثالثة: الموديل القديم المستقر
-        model = genai.GenerativeModel('gemini-pro')
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    
+    # هنا التعديل الذكي: سنحاول تجربة كل الأسماء الممكنة حتى يعمل واحد منها
+    model_names = ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-pro']
+    model = None
+    
+    for name in model_names:
+        try:
+            model = genai.GenerativeModel(name)
+            # تجربة وهمية للتأكد أن النموذج شغال
+            test_res = model.generate_content("hi")
+            break # إذا نجح، توقف عن البحث
+        except:
+            continue
+            
+    if model is None:
+        st.error("عذراً، جميع نماذج جوجل غير متاحة حالياً في هذه النسخة.")
+except Exception as e:
+    st.error(f"خطأ في الإعدادات: {e}")
 
-# 4. واجهة المستخدم
-st.title("🌳 منصة البستان AI")
+st.title("🌳 البستان AI")
 
-if "auth" not in st.session_state:
-    st.session_state["auth"] = False
+# نظام الدخول البسيط
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
 
-if not st.session_state["auth"]:
+if not st.session_state["authenticated"]:
     pwd = st.text_input("كود التفعيل:", type="password")
     if st.button("دخول"):
         if pwd == str(st.secrets["APP_PASSWORD"]):
-            st.session_state["auth"] = True
+            st.session_state["authenticated"] = True
             st.rerun()
 else:
-    name = st.text_input("اسم النشاط:")
-    if st.button("تحليل الآن"):
-        if name:
-            with st.spinner("جاري التحليل..."):
-                try:
-                    # نستخدم توليد بسيط للتجربة
-                    response = model.generate_content(f"اعطني نصيحة تسويقية لـ {name}")
-                    st.write(response.text)
-                except Exception as e:
-                    st.error(f"خطأ في الـ API: {str(e)}")
-        else:
-            st.warning("ادخل الاسم")
+    bus_name = st.text_input("اسم مشروعك:")
+    if st.button("حلل الآن"):
+        try:
+            # استخدام أسلوب توليد يتماشى مع النسخ القديمة والجديدة
+            response = model.generate_content(f"حلل تسويق {bus_name} باختصار")
+            st.write(response.text)
+        except Exception as e:
+            st.error(f"حدث خطأ: {e}")
