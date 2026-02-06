@@ -27,7 +27,7 @@ st.markdown("""
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     # السطر 32 المعدل والمنضبط المسافات:
-    model = genai.GenerativeModel('gemini-1.5-flash')
+  model = genai.GenerativeModel(model_name="gemini-1.5-flash")
     MASTER_PASSWORD = st.secrets["APP_PASSWORD"]
 except KeyError:
     st.error("⚠️ خطأ: لم يتم العثور على المفاتيح في إعدادات Secrets.")
@@ -75,3 +75,4 @@ else:
     if st.sidebar.button("تسجيل الخروج"):
         st.session_state["authenticated"] = False
         st.rerun()
+
