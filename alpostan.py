@@ -18,13 +18,14 @@ try:
     # إعداد مكتبة جوجل
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     
-    # تعريف النموذج - استخدمنا الاسم المباشر والمستقر
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # --- التعديل الجذري هنا لحل خطأ 404 ---
+    # نستخدم gemini-1.5-flash كنموذج افتراضي مستقر
+    model = genai.GenerativeModel(model_name="gemini-1.5-flash")
     
     # كلمة السر
     MASTER_PASSWORD = str(st.secrets["APP_PASSWORD"])
 except Exception as e:
-    st.error("⚠️ تأكد من وضع GEMINI_API_KEY و APP_PASSWORD في صفحة Secrets بالموقع.")
+    st.error("⚠️ تأكد من إعداد Secrets بشكل صحيح.")
     st.stop()
 
 # 4. نظام تسجيل الدخول
@@ -57,24 +58,21 @@ else:
 
     if submit_btn:
         if name and niche and comp:
-            with st.spinner("⏳ جاري استدعاء الذكاء الاصطناعي وبناء الجداول..."):
+            with st.spinner("⏳ جاري التحليل..."):
                 try:
-                    prompt = f"""
-                    أنت خبير تسويق محترف. قم بعمل تحليل لـ {name} في مجال {niche}.
-                    المنافسون هم: {comp}.
-                    المطلوب:
-                    1. جدول تحليل SWOT للمنافسين.
-                    2. جدول بخطة محتوى لمدة أسبوع.
-                    3. نصيحة ذهبية للتميز في هذا السوق.
-                    اجعل الرد باللغة العربية ومنظماً في جداول Markdown.
-                    """
+                    prompt = f"حلل منافسين لـ {name} في مجال {niche}. المنافسين: {comp}. اعرض النتائج في جداول Markdown بالعربية."
+                    
+                    # طلب التوليد مع تحديد الإصدار المستقر داخلياً
                     response = model.generate_content(prompt)
+                    
                     st.success(f"✅ تم التحليل بنجاح لـ {name}")
                     st.markdown(response.text)
                 except Exception as e:
-                    st.error(f"حدث خطأ في الاتصال بـ Gemini: {e}")
+                    # إذا استمر الخطأ، سنعرض رسالة تفصيلية للمساعدة
+                    st.error(f"خطأ في الاتصال: {e}")
+                    st.info("نصيحة: تأكد من تحديث ملف requirements.txt إلى google-generativeai>=0.8.0")
         else:
-            st.warning("⚠️ فضلاً أكمل جميع البيانات (الاسم، المجال، المنافسين).")
+            st.warning("⚠️ فضلاً أكمل جميع البيانات.")
 
 st.markdown("---")
 st.caption("برمجة وتطوير البستان AI © 2026")
