@@ -1,9 +1,9 @@
 import streamlit as st
-import pywhatkit as kit
+import pandas as pd
 import random
-from datetime import datetime
+import urllib.parse
 
-# --- إعدادات الصفحة الاحترافية ---
+# --- إعدادات الصفحة ---
 st.set_page_config(
     page_title="AL-POSTAN AI Marketing Suite",
     page_icon="🚀",
@@ -15,124 +15,128 @@ st.markdown("""
     <style>
     .main { background-color: #f8f9fa; }
     .stButton>button { width: 100%; border-radius: 8px; height: 3em; background-color: #27ae60; color: white; font-weight: bold; }
-    .stTabs [data-baseweb="tab-list"] { gap: 20px; }
-    .stTabs [data-baseweb="tab"] { background-color: #e9ecef; border-radius: 5px; padding: 10px 20px; }
+    .whatsapp-btn {
+        display: inline-block;
+        padding: 0.75em 1.25em;
+        background-color: #25D366;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: bold;
+        width: 100%;
+    }
     </style>
     """, unsafe_allow_html=True)
 
 # --- العنوان الرئيسي ---
 st.title("💡 منظومة AL-POSTAN للتسويق الذكي")
-st.markdown("🛠️ *الأداة الشاملة لتحليل المنافسين، صناعة المحتوى، وجدولة المنشورات*")
+st.markdown("🛠️ *الإصدار المطور v2.0 - معالجة ذكية للبيانات*")
 st.divider()
 
 # --- القائمة الجانبية (Sidebar) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1998/1998087.png", width=100)
-    st.header("📲 تواصل مع العميل")
-    client_phone = st.text_input("رقم واتساب العميل (بمفتاح الدولة)", placeholder="+2010XXXXXXXX")
-    st.info("ملاحظة: إرسال الواتساب يعمل عند تشغيل البرنامج محلياً ويحتاج فتح WhatsApp Web.")
+    st.header("📲 بيانات العميل")
+    client_phone = st.text_input("رقم واتساب العميل", placeholder="2010XXXXXXXX")
+    st.caption("أدخل الرقم بالصيغة الدولية بدون (+) أو أصفار إضافية")
     st.divider()
-    st.write("✅ إصدار v2.0 - 2026")
+    st.info("هذا الإصدار يدعم الإرسال من المتصفح مباشرة (Cloud Friendly)")
 
-# --- تعريف التبويبات الأربعة (حل مشكلة NameError) ---
+# --- التبويبات ---
 tab1, tab2, tab3, tab4 = st.tabs([
-    "📊 تحليل السوق", 
-    "✍️ توليد المحتوى", 
-    "🖼️ التصميم المرئي", 
-    "📅 جدول الـ 30 يوماً"
+    "📊 تحليل السوق", "✍️ توليد المحتوى", "🎨 التصميم المرئي", "📅 جدول الـ 30 يوماً"
 ])
 
-# --- التبويب الأول: تحليل السوق ---
 with tab1:
-    st.subheader("🔍 مدخلات الاستراتيجية")
     col1, col2 = st.columns(2)
     with col1:
-        prod_name = st.text_input("اسم المنتج أو الخدمة", placeholder="مثلاً: برنامج كاشير البستان")
-        pain_point = st.text_area("ألم العميل (المشكلة التي يواجهها)", placeholder="مثلاً: صعوبة حساب الأرباح وضياع الفواتير")
+        prod_name = st.text_input("اسم المنتج أو الخدمة", value="برنامج كاشير البستان")
+        pain_point = st.text_area("ألم العميل", value="صعوبة حساب الأرباح وضياع الفواتير")
     with col2:
-        target_group = st.text_input("الجمهور المستهدف", placeholder="مثلاً: أصحاب السوبر ماركت والمحلات")
-        competitor_flaw = st.text_area("نقاط ضعف المنافسين", placeholder="مثلاً: أسعارهم غالية ودعم فني بطيء")
+        target_group = st.text_input("الجمهور المستهدف", value="أصحاب السوبر ماركت")
+        competitor_flaw = st.text_area("نقاط ضعف المنافسين", value="دعم فني بطيء وأسعار مرتفعة")
 
-# --- التبويب الثاني: توليد المحتوى ---
 with tab2:
-    st.subheader("📝 الرسالة الإعلانية")
     col3, col4 = st.columns(2)
     with col3:
-        advantage = st.text_input("ميزتك التنافسية الكبرى", placeholder="مثلاً: دعم فني 24 ساعة وربط بالموبايل")
+        advantage = st.text_input("ميزتك الكبرى", value="دعم فني 24 ساعة وربط بالموبايل")
     with col4:
-        offer = st.text_input("العرض الخاص الحالي", placeholder="مثلاً: خصم 25% وتركيب مجاني")
+        offer = st.text_input("العرض الخاص", value="خصم 25% وتركيب مجاني")
 
-# --- التبويب الثالث: التصميم المرئي ---
 with tab3:
-    st.subheader("🎨 أوصاف الصور (AI Prompts)")
-    visual_style = st.selectbox("اختر نمط الصور للإعلان", ["واقعي جداً (Photorealistic)", "رسوم متحركة (3D Render)", "تصميم مسطح (Flat Design)", "سينمائي (Cinematic)"])
-    st.info("استخدم الأوصاف التي ستظهر هنا في برامج مثل Midjourney أو DALL-E.")
+    visual_style = st.selectbox("نمط الصور", ["Photorealistic", "3D Render", "Flat Design", "Cinematic"])
 
-# --- التبويب الرابع: جدول الـ 30 يوماً ---
 with tab4:
-    st.subheader("🗓️ خطة المحتوى الشهري")
-    generate_calendar = st.checkbox("أريد توليد جدول منشورات لشهر كامل (30 يوم)")
+    generate_calendar = st.checkbox("توليد جدول 30 يوماً", value=True)
 
-# --- زر التنفيذ النهائي ---
-st.divider()
+# --- معالجة البيانات ---
 if st.button("توليد المنظومة التسويقية الكاملة ✨"):
     if not prod_name or not pain_point:
-        st.error("⚠️ يرجى تعبئة البيانات الأساسية في تبويب (تحليل السوق) أولاً.")
+        st.error("⚠️ يرجى تعبئة البيانات الأساسية أولاً.")
     else:
-        # 1. بناء التقرير النصي
-        report = f"""
-        *🚀 خطة تسويق احترافية لـ {prod_name}*
-        ----------------------------------
-        🎯 *الجمهور المستهدف:* {target_group}
-        ❌ *المشكلة التي نحلها:* {pain_point}
-        ⚔️ *نقاط تفوقنا على المنافسين:* {advantage}
-        ----------------------------------
-        📢 *الإعلان المقترح (صيغة AIDA):*
-        هل تعبت من {pain_point}؟ 😫 
-        المنافسون يقدمون حلولاً معقدة، لكن مع **{prod_name}** الأمر مختلف تماماً! 
-        نحن نضمن لك {advantage}.
-        🔥 *العرض:* {offer}
-        ----------------------------------
-        🖼️ *وصف تصميم الـ AI:*
-        Digital art of {target_group} using {prod_name}, solving {pain_point}, in a {visual_style} style, high quality, 8k resolution.
-        """
+        # 1. بناء التقرير
+        report_text = f"""🚀 خطة تسويق: {prod_name}
+----------------------------------
+🎯 الجمهور: {target_group}
+❌ المشكلة: {pain_point}
+⚔️ ميزتنا: {advantage}
+🔥 العرض: {offer}
 
-        # 2. توليد الجدول الزمني إذا تم اختياره
-        calendar_text = ""
-        if generate_calendar:
-            content_types = [
-                "💡 منشور تعليمي: كيف تتغلب على {pain}؟",
-                "🎯 منشور بيعي: لماذا {prod} هو اختيار {target} الأول؟",
-                "❓ منشور تفاعلي: ما هو أكثر شيء يزعجك في إدارة مشروعك؟",
-                "🌟 قصة نجاح: كيف وفر {prod} الوقت لعملائنا؟",
-                "🎁 عرض خاص: لا تفوت {offer} المتاح الآن!"
-            ]
-            calendar_text = "\n\n📅 *جدول المحتوى (أمثلة للأيام الأولى):*\n"
-            for i in range(1, 31):
-                raw_idea = random.choice(content_types)
-                idea = raw_idea.format(pain=pain_point, prod=prod_name, offer=offer, target=target_group)
-                calendar_text += f"اليوم {i}: {idea}\n"
-
-        # عرض النتائج في الموقع
-        st.success("✅ تم توليد المنظومة بنجاح!")
-        st.markdown(report)
-        if generate_calendar:
-            with st.expander("مشاهدة جدول الـ 30 يوماً بالكامل"):
-                st.text(calendar_text)
+📢 إعلان مقترح:
+هل تعبت من {pain_point}؟ مع {prod_name} وفرنا لك {advantage}. اطلب الآن واحصل على {offer}!
+----------------------------------
+🎨 وصف الـ AI:
+Digital art of {target_group} using {prod_name}, solving {pain_point}, style: {visual_style}, 8k resolution.
+"""
         
-        # حفظ في الذاكرة للإرسال
-        st.session_state['final_full_report'] = report + calendar_text
+        # 2. توليد الجدول كبيانات منظمة
+        content_types = [
+            "💡 تعليمي: كيف تتغلب على {pain}؟",
+            "🎯 بيعي: لماذا {prod} هو الأفضل لـ {target}؟",
+            "❓ تفاعلي: ما هي أكبر عقبة تواجهك؟",
+            "🌟 نجاح: قصة عميل مع {prod}",
+            "🎁 عرض: {offer} لفترة محدودة"
+        ]
+        
+        calendar_data = []
+        full_calendar_text = "\n📅 جدول المحتوى:\n"
+        for i in range(1, 31):
+            idea = random.choice(content_types).format(pain=pain_point, prod=prod_name, offer=offer, target=target_group)
+            calendar_data.append({"اليوم": f"يوم {i}", "الفكرة المقترحة": idea})
+            full_calendar_text += f"{i}. {idea}\n"
 
-# --- زر إرسال واتساب ---
-if 'final_full_report' in st.session_state:
+        # تخزين في session_state
+        st.session_state['report'] = report_text + full_calendar_text
+        st.session_state['df'] = pd.DataFrame(calendar_data)
+
+        # عرض النتائج
+        st.success("✅ تم التجهيز بنجاح")
+        st.markdown(f"```\n{report_text}\n```")
+        
+        if generate_calendar:
+            with st.expander("📅 عرض جدول الـ 30 يوماً"):
+                st.table(st.session_state['df'])
+
+# --- أدوات التصدير ---
+if 'report' in st.session_state:
     st.divider()
-    if st.button("📨 إرسال كل ما سبق للعميل عبر واتساب"):
+    c1, c2 = st.columns(2)
+    
+    with c1:
+        # تحميل الملف
+        st.download_button(
+            label="📥 تحميل الخطة (Text)",
+            data=st.session_state['report'],
+            file_name="marketing_plan.txt",
+            mime="text/plain"
+        )
+    
+    with c2:
+        # إرسال واتساب عبر رابط مباشر (يعمل في كل مكان)
         if client_phone:
-            try:
-                # إرسال واتساب (يعمل في البيئة المحلية)
-                kit.sendwhatmsg_instantly(client_phone, st.session_state['final_full_report'], wait_time=15)
-                st.toast("جاري محاولة فتح واتساب ويب...")
-            except:
-                st.error("فشل الإرسال التلقائي. تأكد من تشغيل البرنامج على جهازك (Local) وليس فقط من السحاب.")
+            encoded_text = urllib.parse.quote(st.session_state['report'])
+            whatsapp_url = f"https://wa.me/{client_phone}?text={encoded_text}"
+            st.markdown(f'<a href="{whatsapp_url}" target="_blank" class="whatsapp-btn">📲 إرسال للعميل عبر واتساب</a>', unsafe_allow_html=True)
         else:
-            st.warning("يرجى إدخال رقم هاتف العميل في القائمة الجانبية.")
+            st.warning("أدخل رقم الهاتف لتفعيل زر الواتساب")
