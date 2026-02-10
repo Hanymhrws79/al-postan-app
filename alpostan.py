@@ -1,58 +1,40 @@
 import streamlit as st
-import google.generativeai as genai
+import random # لتنويع أفكار المنشورات
 
-# إعداد الصفحة
-st.set_page_config(page_title="البستان AI", layout="wide")
+# --- إضافة هذا الجزء داخل كودك السابق ---
 
-# دالة استدعاء الذكاء الاصطناعي بطريقة آمنة
-def generate_ai_response(prompt):
-    try:
-        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+# سنضيف Tab جديد بجانب التبويبات السابقة
+# tabs = st.tabs(["📊 تحليل السوق", "✍️ توليد المحتوى", "🖼️ التصميم المرئي", "📅 جدول الـ 30 يوماً"])
+
+# كود تبويب الجدول الزمني:
+with tab4: # تأكد من تعريف tab4 في سطر الـ tabs
+    st.subheader("🗓️ خطة المحتوى الشهري (30 يوم)")
+    st.write("سيقوم البرنامج بتوليد توزيع ذكي للمنشورات (تعليمي، بيعي، تفاعلي).")
+    
+    if st.button("توليد جدول المنشورات لشهر كامل 🚀"):
+        st.info("جاري تصميم الجدول الزمني بناءً على منتجك...")
         
-        # محاولة استخدام 3 أسماء مختلفة للنموذج (لحل مشكلة 404)
-        model_names = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-pro']
+        # أنواع المنشورات لتنويع المحتوى
+        content_types = [
+            "💡 منشور تعليمي: حل مشكلة {pain} باستخدام {prod}",
+            "🎯 منشور بيعي مباشر: عرض {offer} لجمهورنا من {target}",
+            "❓ منشور تفاعلي: اسأل جمهورك عن رأيهم في {prod}",
+            "🌟 منشور ثقة: شهادة عميل أو قصة نجاح بفضل {prod}",
+            "🎬 منشور خلف الكواليس: كيف نصنع {prod} لضمان الجودة"
+        ]
         
-        success = False
-        for name in model_names:
-            try:
-                model = genai.GenerativeModel(name)
-                response = model.generate_content(prompt)
-                return response.text
-            except:
-                continue # إذا فشل هذا الاسم يجرب الذي يليه
+        days = []
+        for i in range(1, 31):
+            # اختيار نوع منشور عشوائي وتعبئته بالبيانات
+            raw_idea = random.choice(content_types)
+            idea = raw_idea.format(pain=pain_point, prod=prod_name, offer=offer, target=target_group)
+            days.append(f"| اليوم {i} | {idea} |")
+
+        # عرض الجدول بشكل منظم
+        st.markdown("### 📋 جدول الشهر المقترح:")
+        header = "| اليوم | فكرة المنشور |\n| :--- | :--- |"
+        full_table = header + "\n" + "\n".join(days)
+        st.markdown(full_table)
         
-        return "عذراً، لم أستطع الاتصال بالنماذج المتاحة حالياً. تأكد من صلاحية الـ API Key."
-    except Exception as e:
-        return f"حدث خطأ في النظام: {str(e)}"
-
-# --- واجهة المستخدم ---
-st.title("🌳 منصة البستان AI")
-
-if "auth" not in st.session_state:
-    st.session_state["auth"] = False
-
-if not st.session_state["auth"]:
-    pwd = st.text_input("كود التفعيل:", type="password")
-    if st.button("دخول"):
-        if pwd == str(st.secrets["APP_PASSWORD"]):
-            st.session_state["auth"] = True
-            st.rerun()
-        else:
-            st.error("الكود غير صحيح")
-else:
-    # التطبيق الأساسي
-    with st.sidebar:
-        st.header("إعدادات التحليل")
-        biz_name = st.text_input("اسم النشاط:")
-        biz_niche = st.text_input("المجال:")
-        analyze = st.button("🚀 ابدأ التحليل")
-
-    if analyze:
-        if biz_name and biz_niche:
-            with st.spinner("جاري التحليل باستخدام الذكاء الاصطناعي..."):
-                full_prompt = f"أنت خبير تسويق، حلل مشروع {biz_name} في مجال {biz_niche} واعطني استراتيجية عمل وجدول محتوى."
-                result = generate_ai_response(full_prompt)
-                st.markdown("### 📊 نتائج التحليل:")
-                st.write(result)
-        else:
-            st.warning("يرجى ملء البيانات")
+        # حفظ الجدول في التقرير لإرساله بالواتساب
+        st.session_state['calendar_report'] = full_table
